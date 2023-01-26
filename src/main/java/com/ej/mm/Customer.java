@@ -2,7 +2,7 @@ package com.ej.mm;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Client {
+public class Customer {
     @JsonProperty("firstname")
     public String firstName;
     @JsonProperty("lastname")
