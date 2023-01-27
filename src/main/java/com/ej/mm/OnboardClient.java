@@ -1,14 +1,20 @@
 package com.ej.mm;
 
-import java.util.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.azure.functions.annotation.*;
 import com.microsoft.azure.functions.*;
-import jakarta.ws.rs.client.*;
+import com.microsoft.azure.functions.annotation.AuthorizationLevel;
+import com.microsoft.azure.functions.annotation.FunctionName;
+import com.microsoft.azure.functions.annotation.HttpTrigger;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import java.util.Optional;
+import java.util.logging.Logger;
 
 
 /**
@@ -25,10 +31,11 @@ public class OnboardClient {
     public HttpResponseMessage run(
             @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) throws JsonProcessingException {
-        context.getLogger().info("Java HTTP trigger processed a request.");
+        Logger logger = context.getLogger();
+        logger.info("Java HTTP trigger processed a request.");
 
         // Parse query parameter
-       String clientInfo = request.getBody().orElse(null);
+        String clientInfo = request.getBody().orElse(null);
 
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -36,21 +43,27 @@ public class OnboardClient {
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass client details in the request body").build();
         } else {
             Customer newClient = objectMapper.readValue(clientInfo, Customer.class);
-            context.getLogger().info("new client added");
+            logger.info("New client onboard request received");
 
-           // Form form = new Form();
-            //form.add("id", "1");
-           // form.add("name", "supercobra");
-           // String clientAsString = objectMapper.writeValueAsString(newClient);
-            Client client = ClientBuilder.newClient();
-            WebTarget resource = client.target("http://localhost:8080/LoginApp/Login.jsp");
-            Response response = resource.request().post(Entity.text(clientInfo), Response.class);
+            try (Client client = ClientBuilder.newClient()) {
 
-            context.getLogger().info("Received Message From my-test-queue : " + response.getStatusInfo());
+                WebTarget resource = client.target(System.getenv("OnboardingServiceURL"));
 
-            //return request.createResponseBuilder(HttpStatus.OK).body("Hello, " + newClient).build();
-            return request.createResponseBuilder(HttpStatus.OK).body("Hello, " + newClient.getFirstName()+" "+newClient.getLastName()).build();
-           // return request.createResponseBuilder(HttpStatus.OK).body("Hello, ").build();
+                logger.info("New client onboard request sent to java aks");
+                Response response = resource.request().post(Entity.entity(newClient, MediaType.APPLICATION_JSON), Response.class);
+                logger.info("New client onboard request sent to java aks response status ::" + response.getStatusInfo());
+                if(response.getStatusInfo().equals(Response.Status.OK)) {
+                   String onBoardId = response.readEntity(String.class);
+                   return request.createResponseBuilder(HttpStatus.OK).body("Client Onboarded with client id:: " + onBoardId).build();
+                  //  String onBoardId = response.readEntity(String.class);
+                  //  return request.createResponseBuilder(HttpStatus.OK).body("Client Onboarded with client id:: " + objectMapper.readValue(onBoardId, Customer.class).getNewClientId()).build();
+
+                }
+                response.close();
+            }
+
+            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Error while onboarding").build();
+
         }
     }
 

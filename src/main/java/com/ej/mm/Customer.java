@@ -2,17 +2,32 @@ package com.ej.mm;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Customer {
-    @JsonProperty("firstname")
-    public String firstName;
-    @JsonProperty("lastname")
-    public String lastName;
-    @JsonProperty("email")
-    public String email;
-    @JsonProperty("phoneno")
-    public Integer phoneNo;
-    @JsonProperty("address")
-    public String address;
+import java.io.Serializable;
+
+public class Customer implements Serializable {
+    public Customer() {
+    }
+
+    public Customer(String description, String details, String email) {
+        this.firstName = description;
+        this.lastName = details;
+        this.email = email;
+    }
+
+
+    private Long newClientId;
+   // @JsonProperty("firstname")
+    private String firstName;
+    private String lastName;
+    private String email;
+
+    public Long getNewClientId() {
+        return newClientId;
+    }
+
+    public void setNewClientId(Long newClientId) {
+        this.newClientId = newClientId;
+    }
 
     public String getFirstName() {
         return firstName;
@@ -26,8 +41,8 @@ public class Customer {
         return lastName;
     }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setLastName(String latName) {
+        this.lastName = latName;
     }
 
     public String getEmail() {
@@ -38,30 +53,13 @@ public class Customer {
         this.email = email;
     }
 
-    public Integer getPhoneNo() {
-        return phoneNo;
-    }
-
-    public void setPhoneNo(Integer phoneNo) {
-        this.phoneNo = phoneNo;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     @Override
     public String toString() {
-        return "Client{" +
-                "First Name='" + firstName + '\'' +
+        return "Customer{" +
+                "newClientId=" + newClientId +
+                ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", phoneNo=" + phoneNo +
-                ", address='" + address + '\'' +
                 '}';
     }
 }
